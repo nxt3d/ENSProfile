@@ -36,8 +36,8 @@ contract MyResolver is ERC165, AccessControl, IAddrResolver, ITextResolver, IExt
 
     constructor() {
         // Assign the deployer as the default admin and admin role
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
     }
 
     // ERC-165 support
