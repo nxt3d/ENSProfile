@@ -46,13 +46,13 @@ contract FollowHook is ERC165, AccessControl, ITextResolver, IExtendedResolver {
         }
     }
 
-    event RequestAdded(string indexed key, bytes indexed request);
+    event RequestSet(string indexed key, bytes indexed request);
 
     // a function that sets a request
     function setRequest(string memory key, bytes memory _request) external onlyRole(ADMIN_ROLE){
         HookStorage storage hs = _hookStorage();
         hs.requests[key] = _request;
-        emit RequestAdded(key, _request);
+        emit RequestSet(key, _request);
     }
 
     function getRequest(string memory key) external view returns (bytes memory) {
