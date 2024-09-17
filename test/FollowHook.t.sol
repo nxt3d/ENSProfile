@@ -26,7 +26,12 @@ contract FollowHookTest is Test {
     bytes follow2 = bytes("Follow2");
     bytes follow3 = bytes("Follow3");
 
+    bytes request1 = bytes("RequestData1");
+    bytes request2 = bytes("RequestData2");
+    bytes request3 = bytes("RequestData3");
+
     function setUp() public {
+        vm.startPrank(account1);
         followHook = new FollowHook();
     }
 
@@ -34,14 +39,15 @@ contract FollowHookTest is Test {
     function test2000__________________________FOLLOW_HOOK__________________________________________() public {}
     function test3000________________________________________________________________________________() public {}
 
-    function test_001____addFollow_____________________FollowCanBeAdded() public {
+    function test_001____addFollow____________________FollowCanBeAdded() public {
         followHook.addFollow(follow1);
         uint256 totalFollows = followHook.totalFollows();
         assertEq(totalFollows, 1);
         assertEq(followHook.getFollowByIndex(0), follow1);
     }
 
-    function test_002____addFollow_____________________UnauthorizedCaller_Reverts() public {
+    function test_002____addFollow____________________UnauthorizedCaller_Reverts() public {
+        vm.stopPrank();
         vm.startPrank(hacker);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -53,7 +59,7 @@ contract FollowHookTest is Test {
         followHook.addFollow(follow1);
     }
 
-    function test_003____removeFollowByIndex_____________________FollowCanBeRemoved() public {
+    function test_003____removeFollowByIndex__________FollowCanBeRemoved() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
 
@@ -63,7 +69,7 @@ contract FollowHookTest is Test {
         assertEq(followHook.getFollowByIndex(0), follow2);
     }
 
-    function test_004____removeFollowByIndex_____________________UnauthorizedCaller_Reverts() public {
+    function test_004____removeFollowByIndex__________UnauthorizedCaller_Reverts() public {
         followHook.addFollow(follow1);
 
         vm.startPrank(hacker);
@@ -77,7 +83,7 @@ contract FollowHookTest is Test {
         followHook.removeFollowByIndex(0);
     }
 
-    function test_005____removeFollowByIndex_____________________IndexOutOfBounds_Reverts() public {
+    function test_005____removeFollowByIndex__________IndexOutOfBounds_Reverts() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
 
@@ -85,7 +91,7 @@ contract FollowHookTest is Test {
         followHook.removeFollowByIndex(2);
     }
 
-    function test_006____text_____________________ReturnsFollowsList() public {
+    function test_006____text_________________________ReturnsFollowsList() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
         followHook.addFollow(follow3);
@@ -93,16 +99,13 @@ contract FollowHookTest is Test {
         // Convert the address to string without the 0x prefix
         string memory addressString = StringUtilsHook.addressToString(address(followHook));
 
-        // log the address of the followHook contract
-        console.log("followHook address: %s", address(followHook));
-
         string memory key = string(abi.encodePacked("hook:follow:0,2:", addressString));
         string memory result = followHook.text(0x0, key);
 
         assertEq(result, '[Follow1,Follow2,Follow3]');
     }
 
-      function test_007____text_____________________ReturnsPartialFollowsList() public {
+    function test_007____text_________________________ReturnsPartialFollowsList() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
         followHook.addFollow(follow3);
@@ -116,7 +119,7 @@ contract FollowHookTest is Test {
         assertEq(result, '[Follow2,Follow3]');
     }
 
-    function test_008____text_____________________InvalidAddress_Reverts() public {
+    function test_008____text_________________________InvalidAddress_Reverts() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
 
@@ -125,7 +128,7 @@ contract FollowHookTest is Test {
         followHook.text(0x0, key);
     }
 
-    function test_009____text_____________________InvalidIndices_Reverts() public {
+    function test_009____text_________________________InvalidIndices_Reverts() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
 
@@ -134,16 +137,22 @@ contract FollowHookTest is Test {
         followHook.text(0x0, key);
     }
 
-    function test_010____text_____________________MaxLengthExceeded_Reverts() public {
-        followHook.addFollow(follow1);
-        followHook.addFollow(follow2);
+    function test_010____text_________________________MaxLengthExceeded_Reverts() public {
+
+        // use addFollowBatch to add 22 follows using bytes
+        bytes[] memory followRecords = new bytes[](22);
+        for (uint256 i = 0; i < 22; i++) {
+            followRecords[i] = bytes("Follow");
+        }
+
+        followHook.addFollowBatch(followRecords);
 
         string memory key = string(abi.encodePacked("hook:follow:0,21:", StringUtilsHook.addressToString(address(followHook))));
         vm.expectRevert("Max length of follows list is 21");
         followHook.text(0x0, key);
     }
 
-    function test_011____addFollow_____________________MultipleFollowsCanBeAdded() public {
+    function test_011____addFollow____________________MultipleFollowsCanBeAdded() public {
         followHook.addFollow(follow1);
         followHook.addFollow(follow2);
         followHook.addFollow(follow3);
@@ -155,27 +164,85 @@ contract FollowHookTest is Test {
         assertEq(followHook.getFollowByIndex(2), follow3);
     }
 
-    function test_012____supportsInterface_____________________SupportsTextAndExtendedResolver() public {
+    function test_012____supportsInterface____________SupportsTextAndExtendedResolver() public {
         assertTrue(followHook.supportsInterface(type(ITextResolver).interfaceId));
         assertTrue(followHook.supportsInterface(type(IExtendedResolver).interfaceId));
     }
 
-    function test_013____supportsInterface_____________________SupportsAccessControl() public {
+    function test_013____supportsInterface____________SupportsAccessControl() public {
         assertTrue(followHook.supportsInterface(type(IAccessControl).interfaceId));
     }
 
-    function test_014____supportsInterface_____________________DoesNotSupportRandomInterface() public {
+    function test_014____supportsInterface____________DoesNotSupportRandomInterface() public {
         bytes4 randomInterface = bytes4(keccak256("RandomInterface()"));
         assertFalse(followHook.supportsInterface(randomInterface));
     }
 
-    function test_015____resolve_____________________ResolvesTextSelector() public {
+    function test_015____resolve______________________ResolvesTextSelector() public {
         followHook.addFollow(follow1);
 
-        bytes memory data = abi.encodeWithSelector(ITextResolver.text.selector, bytes32(0x0), "hook:follow:0,0:address");
+        // create the string
+        bytes memory key = abi.encodePacked("hook:follow:0,0:", StringUtilsHook.addressToString(address(followHook)));
+
+        bytes memory data = abi.encodeWithSelector(ITextResolver.text.selector, bytes32(0x0), key);
         bytes memory result = followHook.resolve("", data);
 
         assertEq(abi.decode(result, (string)), "[Follow1]");
+    }
+
+        // Test setting a request
+    function test_016____setRequest___________________RequestCanBeSet() public {
+        followHook.setRequest("request1", request1);
+        bytes memory retrievedRequest = followHook.getRequest("request1");
+        assertEq(retrievedRequest, request1);
+    }
+
+    // Test setting multiple requests
+    function test_017____setRequest___________________MultipleRequestsCanBeSet() public {
+        followHook.setRequest("request1", request1);
+        followHook.setRequest("request2", request2);
+        followHook.setRequest("request3", request3);
+
+        assertEq(followHook.getRequest("request1"), request1);
+        assertEq(followHook.getRequest("request2"), request2);
+        assertEq(followHook.getRequest("request3"), request3);
+    }
+
+    // Test overwriting a request
+    function test_018____setRequest___________________RequestCanBeOverwritten() public {
+        followHook.setRequest("request1", request1);
+        followHook.setRequest("request1", request2); // Overwriting request1
+
+        assertEq(followHook.getRequest("request1"), request2); // Should return request2
+    }
+
+    // Test unauthorized access to setRequest
+    function test_019____setRequest___________________UnauthorizedCaller_Reverts() public {
+        vm.stopPrank();
+        vm.startPrank(hacker);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                hacker,
+                followHook.ADMIN_ROLE()
+            )
+        );
+        followHook.setRequest("request1", request1);
+    }
+
+    // Test getRequest for non-existent key
+    function test_020____getRequest___________________NonExistentRequest_ReturnsEmpty() public {
+        bytes memory retrievedRequest = followHook.getRequest("nonexistentKey");
+        assertEq(retrievedRequest.length, 0); // Should return empty bytes
+    }
+
+    // Test getRequest after overwriting a request
+    function test_021____getRequest___________________RetrieveOverwrittenRequest() public {
+        followHook.setRequest("request1", request1);
+        followHook.setRequest("request1", request3); // Overwriting request1
+
+        bytes memory retrievedRequest = followHook.getRequest("request1");
+        assertEq(retrievedRequest, request3); // Should return request3 now
     }
 
 }

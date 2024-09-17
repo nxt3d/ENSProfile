@@ -29,9 +29,10 @@ contract FollowHook is ERC165, AccessControl, ITextResolver, IExtendedResolver {
             super.supportsInterface(interfaceID);
     }
 
+    // Requests allow for a verifier to build a proof of the follows using the request stored in the "follow" key
     /// @custom:storage-location erc7201:ens.resolver.hooks
     struct HookStorage {
-        mapping(string key => bytes) oPCodes;
+        mapping(string key => bytes) requests;
         bytes[] follows;
     }
 
@@ -45,6 +46,20 @@ contract FollowHook is ERC165, AccessControl, ITextResolver, IExtendedResolver {
         }
     }
 
+    event RequestAdded(string indexed key, bytes indexed request);
+
+    // a function that sets a request
+    function setRequest(string memory key, bytes memory _request) external onlyRole(ADMIN_ROLE){
+        HookStorage storage hs = _hookStorage();
+        hs.requests[key] = _request;
+        emit RequestAdded(key, _request);
+    }
+
+    function getRequest(string memory key) external view returns (bytes memory) {
+        HookStorage storage hs = _hookStorage();
+        return hs.requests[key];
+    }
+
     event FollowRecordAdded(bytes indexed followRecord);
     event FollowRecordRemoved(bytes indexed followRecord);
 
@@ -53,6 +68,16 @@ contract FollowHook is ERC165, AccessControl, ITextResolver, IExtendedResolver {
         hs.follows.push(followRecord);
         emit FollowRecordAdded(followRecord);
     }
+
+    function addFollowBatch(bytes[] calldata followRecords) external onlyRole(ADMIN_ROLE) {
+        HookStorage storage hs = _hookStorage();
+        for (uint256 i = 0; i < followRecords.length; i++) {
+            hs.follows.push(followRecords[i]);
+            emit FollowRecordAdded(followRecords[i]);
+        }
+    }
+
+    // add a function that adds bytes to the request data to the 
 
     function removeFollowByIndex(uint256 index) external onlyRole(ADMIN_ROLE) {
         HookStorage storage hs = _hookStorage();
