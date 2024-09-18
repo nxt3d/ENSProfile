@@ -18,7 +18,7 @@ ENSProfile is a resolver built for Layer 2 (L2) chains, specifically designed fo
 
 ### Example: Synthetic Text Records Format
 
-Synthetic text records use a structured format to represent dynamic data generated through hooks. Here's an example of the format for a follow hook that returns a subset of users the owner follows:
+Synthetic text records use a structured format to allow for text records to be resolved by hooks. Here's an example of the format for a follow hook that returns a subset of users the owner follows:
 
 ```
 hook:follow:0,20:841b34aa32e63554FC00fe31705E06D129CA114f
