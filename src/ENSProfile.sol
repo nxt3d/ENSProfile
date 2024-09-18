@@ -88,8 +88,6 @@ contract ENSProfile is ERC165, AccessControl, IAddrResolver, IAddressResolver, I
     function resolve(bytes calldata, bytes calldata data) external view override returns (bytes memory) {
         bytes4 selector = bytes4(data[:4]);
 
-        // Since mappings are not iterable, we cannot call hooks here.
-
         if (selector == IAddrResolver.addr.selector) {
             (bool success, bytes memory result) = address(this).staticcall(data);
             require(success, "addr(bytes32) call failed");
@@ -111,16 +109,19 @@ contract ENSProfile is ERC165, AccessControl, IAddrResolver, IAddressResolver, I
         ResolverStorage storage rs = _resolverStorage();
         bytes memory a = abi.encodePacked(addr_);
         rs.addresses[60] = a; // 60 is the coin type for ETH
+        emit AddrChanged(bytes32(0x0), addr_); // Emitting AddrChanged event
     }
 
     function setAddr(uint256 coinType, bytes memory a) external onlyRole(ADMIN_ROLE) {
         ResolverStorage storage rs = _resolverStorage();
         rs.addresses[coinType] = a;
+        emit AddressChanged(bytes32(0x0), coinType, a); // Emitting AddressChanged event
     }
 
     function setText(string calldata key, string calldata value) external onlyRole(ADMIN_ROLE) {
         ResolverStorage storage rs = _resolverStorage();
         rs.textRecords[key] = value;
+        emit TextChanged(bytes32(0x0), key, key, value); // Emitting TextChanged event
     }
 
     // Hook management functions
