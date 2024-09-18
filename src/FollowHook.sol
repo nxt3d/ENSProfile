@@ -36,6 +36,8 @@ contract FollowHook is ERC165, AccessControl, ITextResolver, IExtendedResolver {
         bytes[] follows;
     }
 
+    // This storage slot was calculated using EIP-7201, with the following formula:
+    // bytes32(uint256(keccak256(abi.encode(uint256(keccak256("ens.resolver.hooks")) - 1))) & ~uint256(0xff))
     bytes32 private constant HOOK_STORAGE_LOCATION =
         0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500;
 
