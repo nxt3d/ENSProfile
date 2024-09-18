@@ -1,4 +1,4 @@
-# ENSProfile - A Full Profile Resolver for ENS on Layer 2 (L2)
+# ENSProfile - A User Profile Resolver for L2s
 
 ENSProfile is a resolver built for Layer 2 (L2) chains, specifically designed for an **ENS L2**. It enables users to set up a single profile that can manage the complete set of ENS records, while also allowing for dynamic expansion through hooks. ENSProfile provides secure and scalable ENS resolution on L2, while ensuring honesty and trust via proofs that validate the state of L2 on L1 Ethereum.
 
