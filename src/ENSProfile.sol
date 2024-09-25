@@ -27,43 +27,16 @@ contract ENSProfile is ERC165, AccessControl, IAddrResolver, IAddressResolver, I
             super.supportsInterface(interfaceID);
     }
 
-    /// @custom:storage-location erc7201:ens.resolver.storage
-    struct ResolverStorage {
-        mapping(uint256 => bytes) addresses;
-        mapping(string => string) textRecords;
-    }
+    mapping(uint256 => bytes) addresses;
+    mapping(string => string) textRecords;
+    mapping(string extension => bool) extensions;
 
-    // bytes32 private constant RESOLVER_STORAGE_LOCATION = bytes32(uint256(keccak256(abi.encode(uint256(keccak256("ens.resolver.storage")) - 1))) & ~uint256(0xff));
-    bytes32 private constant RESOLVER_STORAGE_LOCATION = 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500;
 
-    function _resolverStorage() private pure returns (ResolverStorage storage rs) {
-        bytes32 position = RESOLVER_STORAGE_LOCATION;
-        assembly {
-            rs.slot := position
-        }
-    }
-
-    /// @custom:storage-location erc7201:ens.resolver.hooks
-    struct HooksStorage {
-        mapping(address => bool) hooks;
-    }
-
-    // bytes32 private constant HOOKS_STORAGE_LOCATION = bytes32(uint256(keccak256(abi.encode(uint256(keccak256("ens.resolver.hooks")) - 1))) & ~uint256(0xff));
-    bytes32 private constant HOOKS_STORAGE_LOCATION = 0x2cba3c35b83c5ff82316a6dca8bce1b1c99dc3952f8b59477e1ca6f0a14b1a00;
-
-    function _hooksStorage() private pure returns (HooksStorage storage hs) {
-        bytes32 position = HOOKS_STORAGE_LOCATION;
-        assembly {
-            hs.slot := position
-        }
-    }
-
-    event HookAdded(address indexed hook);
-    event HookRemoved(address indexed hook);
+    event ExtensionAdded(string indexed extension);
+    event ExtensionRemoved(string indexed extension);
 
     function addr(bytes32) external view override(IAddrResolver) returns (address payable) {
-        ResolverStorage storage rs = _resolverStorage();
-        bytes memory a = rs.addresses[60]; // 60 is the coin type for ETH
+        bytes memory a = addresses[60]; // 60 is the coin type for ETH
         if (a.length == 20) {
             address payable addr_;
             assembly {
@@ -76,13 +49,11 @@ contract ENSProfile is ERC165, AccessControl, IAddrResolver, IAddressResolver, I
     }
 
     function addr(bytes32, uint256 coinType) external view override(IAddressResolver) returns (bytes memory) {
-        ResolverStorage storage rs = _resolverStorage();
-        return rs.addresses[coinType];
+        return addresses[coinType];
     }
 
     function text(bytes32, string calldata key) external view override returns (string memory) {
-        ResolverStorage storage rs = _resolverStorage();
-        return rs.textRecords[key];
+        return textRecords[key];
     }
 
     function resolve(bytes calldata, bytes calldata data) external view override returns (bytes memory) {
@@ -106,41 +77,33 @@ contract ENSProfile is ERC165, AccessControl, IAddrResolver, IAddressResolver, I
     }
 
     function setAddr(address addr_) external onlyRole(ADMIN_ROLE) {
-        ResolverStorage storage rs = _resolverStorage();
         bytes memory a = abi.encodePacked(addr_);
-        rs.addresses[60] = a; // 60 is the coin type for ETH
+        addresses[60] = a; // 60 is the coin type for ETH
         emit AddrChanged(bytes32(0x0), addr_); // Emitting AddrChanged event
     }
 
     function setAddr(uint256 coinType, bytes memory a) external onlyRole(ADMIN_ROLE) {
-        ResolverStorage storage rs = _resolverStorage();
-        rs.addresses[coinType] = a;
+        addresses[coinType] = a;
         emit AddressChanged(bytes32(0x0), coinType, a); // Emitting AddressChanged event
     }
 
     function setText(string calldata key, string calldata value) external onlyRole(ADMIN_ROLE) {
-        ResolverStorage storage rs = _resolverStorage();
-        rs.textRecords[key] = value;
+        textRecords[key] = value;
         emit TextChanged(bytes32(0x0), key, key, value); // Emitting TextChanged event
     }
 
-    // Hook management functions
-    function addHook(address hook) external onlyRole(ADMIN_ROLE) {
-        require(hook != address(0), "Invalid hook address");
-        HooksStorage storage hs = _hooksStorage();
-        hs.hooks[hook] = true;
-        emit HookAdded(hook);
+    // Extension management functions
+    function addExtension(string memory extension) external onlyRole(ADMIN_ROLE) {
+        extensions[extension] = true;
+        emit ExtensionAdded(extension);
     }
 
-    function removeHook(address hook) external onlyRole(ADMIN_ROLE) {
-        require(hook != address(0), "Invalid hook address");
-        HooksStorage storage hs = _hooksStorage();
-        hs.hooks[hook] = false;
-        emit HookRemoved(hook);
+    function removeExtension(string memory extension) external onlyRole(ADMIN_ROLE) {
+        extensions[extension] = false;
+        emit ExtensionRemoved(extension);
     }
 
-    function isHookActive(address hook) external view returns (bool) {
-        HooksStorage storage hs = _hooksStorage();
-        return hs.hooks[hook];
+    function isExtensionActive(string memory extension) external view returns (bool) {
+        return extensions[extension];
     }
 }

@@ -126,12 +126,12 @@ contract ENSProfileTest is Test {
         ensProfile.setText(key, value);
     }
 
-    function test_007____addHook____________________________HookCanBeAdded() public {
-        ensProfile.addHook(resolver);
-        assertTrue(ensProfile.isHookActive(resolver));
+    function test_007____addExtension_______________________ExtensionCanBeAdded() public {
+        ensProfile.addExtension("eth.extension");
+        assertTrue(ensProfile.isExtensionActive("eth.extension"));
     }
 
-    function test_008____addHook____________________________UnauthorizedCaller_Reverts() public {
+    function test_008____addExtension_______________________UnauthorizedCaller_Reverts() public {
         vm.stopPrank();
         vm.startPrank(hacker);
 
@@ -142,17 +142,18 @@ contract ENSProfileTest is Test {
                 ADMIN_ROLE
             )
         );
-        ensProfile.addHook(resolver);
+        ensProfile.addExtension("eth.extension");
     }
 
-    function test_009____removeHook_________________________HookCanBeRemoved() public {
-        ensProfile.addHook(resolver);
-        ensProfile.removeHook(resolver);
-        assertFalse(ensProfile.isHookActive(resolver));
+    function test_009____removeExtension____________________ExtensionCanBeRemoved() public {
+        ensProfile.addExtension("eth.extension");
+        assertTrue(ensProfile.isExtensionActive("eth.extension"));
+        ensProfile.removeExtension("eth.extension");
+        assertFalse(ensProfile.isExtensionActive("eth.extension"));
     }
 
-    function test_010____removeHook_________________________UnauthorizedCaller_Reverts() public {
-        ensProfile.addHook(resolver);
+    function test_010____removeExtension____________________UnauthorizedCaller_Reverts() public {
+        ensProfile.addExtension("eth.extension");
 
         vm.stopPrank();
         vm.startPrank(hacker);
@@ -164,15 +165,15 @@ contract ENSProfileTest is Test {
                 ADMIN_ROLE
             )
         );
-        ensProfile.removeHook(resolver);
+        ensProfile.removeExtension("eth.extension");
     }
 
-    function test_011____isHookActive_______________________ReturnsCorrectStatus() public {
-        ensProfile.addHook(resolver);
-        assertTrue(ensProfile.isHookActive(resolver));
+    function test_011____isExtensionActive__________________ReturnsCorrectStatus() public {
+        ensProfile.addExtension("eth.extension");
+        assertTrue(ensProfile.isExtensionActive("eth.extension"));
 
-        ensProfile.removeHook(resolver);
-        assertFalse(ensProfile.isHookActive(resolver));
+        ensProfile.removeExtension("eth.extension");
+        assertFalse(ensProfile.isExtensionActive("eth.extension"));
     }
 
     function test_012____supportsInterface__________________ChecksCorrectly() public {
@@ -352,16 +353,11 @@ contract ENSProfileTest is Test {
         ensProfile.setAddr(account3);
     }
 
-    function test_031____removeHook_________________________NotAdded_RevertsSilently() public {
-        ensProfile.removeHook(resolver);
-        assertFalse(ensProfile.isHookActive(resolver));
-    }
+    function test_032____addExtension_______________________SameExtensionMultipleTimes() public {
+        ensProfile.addExtension("eth.extension");
+        ensProfile.addExtension("eth.extension");
 
-    function test_032____addHook____________________________SameHookMultipleTimes() public {
-        ensProfile.addHook(resolver);
-        ensProfile.addHook(resolver);
-
-        assertTrue(ensProfile.isHookActive(resolver));
+        assertTrue(ensProfile.isExtensionActive("eth.extension"));
     }
 
     function test_033____addr_______________________________InvalidCoinType_ReturnsEmpty() public {
