@@ -7,3 +7,6 @@
 [submodule "lib/ens-contracts"]
 	path = lib/ens-contracts
 	url = https://github.com/ensdomains/ens-contracts
+[submodule "lib/unruggable-gateways"]
+	path = lib/unruggable-gateways
+	url = https://github.com/unruggable-labs/unruggable-gateways
