@@ -8,10 +8,10 @@ ENSProfile is a resolver built for Layer 2 (L2) chains, specifically designed fo
 
 2. **Dynamic Profile Expansions**:
    - ENSProfile introduces a concept of **Profile Extensions**, which dynamically expand the capabilities of the profile by adding "synthetic" hook records.
-   - Synthetic hook records are resolved by external smart contracts (profile extensions) that can be on any chain and can be resolved cross-chain.
+   - Synthetic hook records are resolved by external smart contracts (profile extensions) on L1 and can be resolve cross-chain data using proofs.
    - Extensions are added to the ENS Profile using their namespace, such as "eth.extension".
    - Clients are able to resolve hooks, for example, "eth.extension.favoriteColor," as long as the namespace of the extension is added in the ENS Profile and the hook has been registered on L1 in the .eth resolver.
-   - Extensions are also fully provable using Unruggable Gateways, which supports multiple L2s including OP Mainnet, Base, Arbitrum, ZKsync, Scroll, and others.
+   - Extensions can use Unruggable Gateways, which supports multiple L2s including OP Mainnet, Base, Arbitrum, ZKsync, Scroll, and others, to resolve cross-chain records.
 
 3. **L2-to-L1 Proving**:
    - **ENSProfile is specifically designed for Layer 2 (L2) chains**, where gateways are used to resolve names on L2.
