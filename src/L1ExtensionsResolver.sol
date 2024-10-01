@@ -9,16 +9,16 @@ import {ENS} from "ens-contracts/registry/ENS.sol";
 import {BytesUtilsSub} from "utils/BytesUtilsSub.sol";
 
 interface IExtensionResolver {
-    function resolveExtension(bytes32 node, string calldata key, address resolver, uint256 coinType) external returns (string);
+    function resolveExtension(bytes32 node, uint256 coinType, string calldata key, address resolver, uint256 coinType) external returns (string);
     function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string);
 }
 
 struct ExtensionData {
     bytes32 node;
-    address addr;
+    address[] resolvedAddresses;
+    uint256[] resolvedAddressCoinTypes;
     string key;
-    address resolver;
-    uint256 coinType;
+    address extensionResolver;
     bytes[] data;
     uint256 cycle;
 }
@@ -34,10 +34,10 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     // The ENS registry
     ENS _ens;
 
-    // Extensions are hooks that use key-value pairs to be able to resolve records from other 
-    // resolvers, even from other chains. The hook key starts with the domain name of the owner of the 
-    // key, in reverse order, i.e. eth.dao.votes, where the owner of the extension is eth.dao is the key
-    // and 'votes' is the extension terminal key. 
+    // Extensions resolve hooks that use key-value pairs to resolve records from other 
+    // resolvers than the user's resolver, and can even resolver data from other chains. The hook key 
+    // starts with the domain name of the owner of the key, in reverse order, i.e. eth.dao.votes, 
+    // where the owner of the extension eth.dao is the 'id' part of the key and 'votes' is the 'terminal key' part of the key. 
     mapping (string domain => IExtensionResolver extension) extensions;
  
 	constructor(IGatewayProofVerifier verifier, address exampleAddress, ENS ens) {
@@ -78,8 +78,8 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         delete extensions[domain];
     }
 
-
-    function hook(bytes32 node, address addr, string calldata key, address resolver) returns (string) {  
+    // We use a list of cointypes because we want to be able to get more records than one at a time. 
+    function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) returns (string) {  
 
         // split the key into the first two labels and the rest of the key i.e. eth.dao.votes.latest -> eth.dao, votes.latest
         (string memory domain, string memory terminalKey) = BytesUtilsSub.splitKey(key, 2);
@@ -87,73 +87,58 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         // check to make sure the extension exists
         require(extensions[domain] != address(0), "Extension does not exist");
 
-        // check ENS L2 to make sure the user has added the hook
-        // Note: Currently this is being ignored but will need to be implemented
+        // USE UNRUGGABLE GATEWAYS here!!
 
-        // As a hack, we are just calling the hookCallback function directly
+        // We need to check the ENS L2 resolver (ENSProfile resolver) to make sure the user has added the extension.
+        // We are currently skipping this step and assuming the user has added the extension.
+        // Because we are not going to revert, we can just call the hookCallback function directly.
 
-        // a new empty bytes array with length 0
-        bytes[] memory empty = new bytes[](0);
-        buyts[] values = new bytes[](1);
-        
-        // set the first value to 1 i.e. true
+        // make an empty array of bytes values with a length of 1
+        bytes[] memory values = new bytes[](1);
+
+        // Set the first value to true
         values[0] = abi.encode(true);
-        
 
-        return hookCallback(values, 0, abi.encode(ExtensionData(address, terminalKey, resolver, coinType, empty, 0));
-        
+        // make an ExtensionData struct
+        ExtensionData memory extensionData = ExtensionData(node, new address[](0), new uint256[](0), terminalKey, resolver, new bytes[](0), 0);
+
+        // encode the ExtensionData struct
+        bytes memory extensionDataEncoded = abi.encode(extensionData);
+
+        return hookCallback(values, 0, extensionDataEncoded);
+
     }
 
     hookCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
 
-        // Make sure the hook is added.
+        // Make sure the extension is added.
         require(abi.decode(values[0], (bool)), "Hook not added");
 
-        // call resolveExtension
-        return extensions[domain].resolveExtension(abi.decode(extraData, (ExtensionData));
+        // decode the extraData into an ExtensionData struct
+        ExtensionData memory exd = abi.decode(extraData, (ExtensionData));
+
+        // call the extension resolver, if the call doesn't revert then return a string.
+        return extensions[domain].resolveExtension(exd);
     }
 
-    // This is the callback function of the extension resolver, which may be called by the extension resolver)
-    function extensionCallback(bytes[] calldata values, uint8 error, bytes calldata extraData) external returns (string) {
+    // This is the callback function of the extension resolver, which may may be called by the extension resolver
+    function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
         
-        // If the resolution is not done it will return a continue error
-        uint256 CONTINUE_ERROR = 7;
-
-        if (error == CONTINUE_ERROR) {
-
-            // decode the extraData into an ExtensionData struct
-            ExtensionData memory ed = abi.decode(extraData, (ExtensionData));
-
-            // continue to the next cycle, if complete, return the values. 
-            (bytes[] memory returnValues, , , ) = extensions[domain].resolveExtension(ed.node, ed.key, ed.resolver, ed.coinType, ed.data, ed.cycle + 1);
-        } else {
-            // we don't need to call the extension again so just return the values
+        // decode the extraData into an ExtensionData struct
+        ExtensionData memory exd = abi.decode(extraData, (ExtensionData));
+        
+        // if the cycle is 0, then the extension is complete, so return the value
+        if (exd.cycle == 0) {
             return abi.decode(values[0], (string));
         }
 
-        // The call to the extension didn't revert so return the value.  
-        return abi.decode(returnValues[0], (string));
+        // update the cycle
+        exd.cycle = exd.cycle + 1;
+
+        // call the extension resolver, if the call doesn't revert then return a string.
+        return extensions[domain].resolveExtension(exd);
     
     }
- 
-    function supportsInterface(bytes4 x) external pure returns (bool) {
-		return x == 0x3b3b57de; //See https://docs.ens.domains/ensip/1
-	}
- 
-    function addr(bytes32 node) public view returns (address) {
- 
-        GatewayRequest memory r = GatewayFetcher
-            .newRequest(1)
-            .setTarget(_exampleAddress)
-            .setSlot(11)
-            .read()
-            .debug("lol")
-            .setOutput(0);
- 
-		fetch(_verifier, r, this.addrCallback.selector, '');    
-	}
-	
-    function addrCallback(bytes[] calldata values, uint8, bytes calldata extraData) external pure returns (address) {
-        return abi.decode(values[0], (address));
-	}
+
+
 }
