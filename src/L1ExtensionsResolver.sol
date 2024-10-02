@@ -6,19 +6,16 @@ import {GatewayFetcher, GatewayRequest} from "@unruggable/contracts/GatewayFetch
 import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/GatewayFetchTarget.sol";
 // import ENS
 import {ENS} from "ens-contracts/registry/ENS.sol";
-import {BytesUtilsSub} from "utils/BytesUtilsSub.sol";
+import {BytesUtilsSub} from "./utils/BytesUtilsSub.sol";
 
 interface IExtensionResolver {
-    function resolveExtension(bytes32 node, uint256 coinType, string calldata key, address resolver, uint256 coinType) external returns (string);
+    function resolveExtension(ExtensionData data) external returns (string);
     function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string);
 }
 
 struct ExtensionData {
     bytes32 node;
-    address[] resolvedAddresses;
-    uint256[] resolvedAddressCoinTypes;
     string key;
-    address extensionResolver;
     bytes[] data;
     uint256 cycle;
 }
@@ -79,7 +76,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     }
 
     // We use a list of cointypes because we want to be able to get more records than one at a time. 
-    function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) returns (string) {  
+    function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) public returns (string){  
 
         // split the key into the first two labels and the rest of the key i.e. eth.dao.votes.latest -> eth.dao, votes.latest
         (string memory domain, string memory terminalKey) = BytesUtilsSub.splitKey(key, 2);
@@ -100,7 +97,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         values[0] = abi.encode(true);
 
         // make an ExtensionData struct
-        ExtensionData memory extensionData = ExtensionData(node, new address[](0), new uint256[](0), terminalKey, resolver, new bytes[](0), 0);
+        ExtensionData memory extensionData = ExtensionData(node, terminalKey, new bytes[](0), 0);
 
         // encode the ExtensionData struct
         bytes memory extensionDataEncoded = abi.encode(extensionData);
@@ -109,34 +106,34 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
 
     }
 
-    hookCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
+    function hookCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
 
         // Make sure the extension is added.
         require(abi.decode(values[0], (bool)), "Hook not added");
 
         // decode the extraData into an ExtensionData struct
-        ExtensionData memory exd = abi.decode(extraData, (ExtensionData));
+        ExtensionData memory extensionData = abi.decode(extraData, (ExtensionData));
 
         // call the extension resolver, if the call doesn't revert then return a string.
-        return extensions[domain].resolveExtension(exd);
+        return extensions[domain].resolveExtension(extensionData);
     }
 
     // This is the callback function of the extension resolver, which may may be called by the extension resolver
     function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
         
         // decode the extraData into an ExtensionData struct
-        ExtensionData memory exd = abi.decode(extraData, (ExtensionData));
+        ExtensionData memory extensionData = abi.decode(extraData, (ExtensionData));
         
         // if the cycle is 0, then the extension is complete, so return the value
-        if (exd.cycle == 0) {
+        if (extensionData.cycle == 0) {
             return abi.decode(values[0], (string));
         }
 
         // update the cycle
-        exd.cycle = exd.cycle + 1;
+        extensionData.cycle = extensionData.cycle + 1;
 
         // call the extension resolver, if the call doesn't revert then return a string.
-        return extensions[domain].resolveExtension(exd);
+        return extensions[domain].resolveExtension(extensionData);
     
     }
 

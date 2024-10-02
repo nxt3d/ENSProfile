@@ -223,7 +223,7 @@ library BytesUtilsSub {
         bytes[] memory labels = new bytes[](labelCount);
 
         // Parse the labels and store them using a for loop
-        for (uint256 i = 0, labelIndex = 0; i < len; ) {
+        for (uint256 i = 0; labelIndex = 0; i < len ) {
             uint256 labelLen = uint256(uint8(domain[i]));
             if (labelLen == 0) {
                 break;
