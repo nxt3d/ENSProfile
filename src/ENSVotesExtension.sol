@@ -22,6 +22,7 @@ error OffchainLookup(
 struct ExtensionData {
     bytes32 node;
     string key;
+    address extensionResolver;
     bytes[] data;
     uint256 cycle;
 }
@@ -49,21 +50,19 @@ contract ENSVotesExtension is GatewayFetchTarget {
 		return x == 0x3b3b57de; //See https://docs.ens.domains/ensip/1
 	}
 
-    function resolveExtension(ExtensionData extensionData) public returns (string) {
+    function resolveExtension(ExtensionData memory extensionData) public view returns (string memory) {
 
         // If the cycle is 0, we need to resolve the Ethereum L1 address.
         if (extensionData.cycle == 0) {
 
-            // Use Unruggable Gateways here to get the address of the node on coinType 60
+            // Use Unruggable Gateways here to get the address of the node on coinType 60, and also
+            // make sure that the address's primary name is set to the node. 
 
             // Just for testing we are hard coding the address.
             address ethAddress = 0xb8c2C29ee19D8307cb7255e1Cd9CbDE883A267d5;
 
             // set the cointype to ETH: 60
             uint256 ethCoinType = 60;
-
-            // decode the extraData into an ExtensionData struct
-            ExtensionData memory extensionData = abi.decode(extraData, (ExtensionData));
 
             // make sure the terminal key matches "votes"
             require(extensionData.key.equal("votes"), "Invalid key");
@@ -94,7 +93,7 @@ contract ENSVotesExtension is GatewayFetchTarget {
                 address(this),
                 urls,
                 callData, // array callDatas as bytes
-                this.hookCallback.selector,
+                this.extensionCallback.selector,
                 exdDataBytes // ExtensionData as bytes
             );
             
@@ -106,10 +105,10 @@ contract ENSVotesExtension is GatewayFetchTarget {
         if (extensionData.cycle == 1) {
 
             // decode the address from the first value
-            address ethAddress = abi.decode(values[0], (address));
+            address ethAddress = abi.decode(extensionData.data[0], (address));
 
             // decode the coinType from the second value
-            uint256 ethCoinType = abi.decode(values[1], (uint256));
+            uint256 ethCoinType = abi.decode(extensionData.data[1], (uint256));
 
             // If the address is not 0, and the coinType is 60, then we can get the lates votes of the address 
             // from the ENS token contract.
@@ -127,6 +126,11 @@ contract ENSVotesExtension is GatewayFetchTarget {
 
         return "";
 
+    }
+
+    // This is a dummy funciont, which is just needed to create a selector
+    function extensionCallback(bytes[] calldata, uint8, bytes calldata) external pure returns (string memory) {
+        return "";
     }
 
 }

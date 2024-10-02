@@ -9,13 +9,14 @@ import {ENS} from "ens-contracts/registry/ENS.sol";
 import {BytesUtilsSub} from "./utils/BytesUtilsSub.sol";
 
 interface IExtensionResolver {
-    function resolveExtension(ExtensionData data) external returns (string);
-    function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string);
+    function resolveExtension(ExtensionData memory data) external returns (string memory);
+    function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string memory);
 }
 
 struct ExtensionData {
     bytes32 node;
     string key;
+    address extensionResolver;
     bytes[] data;
     uint256 cycle;
 }
@@ -44,13 +45,13 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
 	}
 
     // A function that allows the onwer or approved operator to add an extension to the resolver
-    function addExtension(sting domain, IExtensionResolver extension) public {
+    function addExtension(string memory domain, IExtensionResolver extension) public {
 
         // convert the domain, in reverse order, i.e. eth.dao to the DNS format of dao.eth. 
         bytes memory name = BytesUtilsSub.reverseStringToDNS(domain);
 
         // make the node from the name
-        bytes32 node = BytesUtilsSub.namehash(name);
+        bytes32 node = BytesUtilsSub.namehash(name, 0);
 
         // check to see if the msg.sender is the owner of the node or an approved operator
         require(_ens.owner(node) == msg.sender || _ens.isApprovedForAll(_ens.owner(node), msg.sender), "Not authorized to add extension");
@@ -60,13 +61,13 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     }
 
     // A function that removes an extension from the resolver
-    function removeExtension(string domain) public {
+    function removeExtension(string memory domain) public {
             
         // convert the domain, in reverse order, i.e. eth.dao to the DNS format of dao.eth. 
         bytes memory name = BytesUtilsSub.reverseStringToDNS(domain);
 
         // make the node from the name
-        bytes32 node = BytesUtilsSub.namehash(name);
+        bytes32 node = BytesUtilsSub.namehash(name, 0);
 
         // check to see if the msg.sender is the owner of the node or an approved operator
         require(_ens.owner(node) == msg.sender || _ens.isApprovedForAll(_ens.owner(node), msg.sender), "Not authorized to remove extension");
@@ -76,13 +77,19 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     }
 
     // We use a list of cointypes because we want to be able to get more records than one at a time. 
-    function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) public returns (string){  
+    function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) public returns (string memory){  
 
         // split the key into the first two labels and the rest of the key i.e. eth.dao.votes.latest -> eth.dao, votes.latest
-        (string memory domain, string memory terminalKey) = BytesUtilsSub.splitKey(key, 2);
+        (string memory domain, string memory terminalKey) = BytesUtilsSub.splitReverseDomain(key, 2);
 
         // check to make sure the extension exists
-        require(extensions[domain] != address(0), "Extension does not exist");
+        require(address(extensions[domain]) != address(0), "Extension does not exist");
+
+        // check to make sure the resolver is for this contract
+        require(resolver == address(this), "Invalid resolver");
+
+        // check to make sure the coinType is 60
+        require(coinType == 60, "Invalid coinType");
 
         // USE UNRUGGABLE GATEWAYS here!!
 
@@ -97,16 +104,16 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         values[0] = abi.encode(true);
 
         // make an ExtensionData struct
-        ExtensionData memory extensionData = ExtensionData(node, terminalKey, new bytes[](0), 0);
+        ExtensionData memory extensionData = ExtensionData(node, terminalKey, address(extensions[domain]), new bytes[](0), 0);
 
         // encode the ExtensionData struct
         bytes memory extensionDataEncoded = abi.encode(extensionData);
 
-        return hookCallback(values, 0, extensionDataEncoded);
+        return this.hookCallback(values, 0, extensionDataEncoded);
 
     }
 
-    function hookCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
+    function hookCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string memory) {
 
         // Make sure the extension is added.
         require(abi.decode(values[0], (bool)), "Hook not added");
@@ -115,11 +122,11 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         ExtensionData memory extensionData = abi.decode(extraData, (ExtensionData));
 
         // call the extension resolver, if the call doesn't revert then return a string.
-        return extensions[domain].resolveExtension(extensionData);
+        return IExtensionResolver(extensionData.extensionResolver).resolveExtension(extensionData);
     }
 
     // This is the callback function of the extension resolver, which may may be called by the extension resolver
-    function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string) {
+    function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string memory) {
         
         // decode the extraData into an ExtensionData struct
         ExtensionData memory extensionData = abi.decode(extraData, (ExtensionData));
@@ -129,11 +136,27 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
             return abi.decode(values[0], (string));
         }
 
+        // build a new array of bytes that includes all the previous data bytes and add the new values
+        bytes[] memory newData = new bytes[](extensionData.data.length + values.length);
+
+        // put the old data values into the new data array
+        for (uint256 i = 0; i < extensionData.data.length; i++) {
+            newData[i] = extensionData.data[i];
+        }
+
+        // put the new values into the new data array
+        for (uint256 i = 0; i < values.length; i++) {
+            newData[extensionData.data.length + i] = values[i];
+        }
+
+        // set the extensionData data to the new data
+        extensionData.data = newData;
+
         // update the cycle
         extensionData.cycle = extensionData.cycle + 1;
 
         // call the extension resolver, if the call doesn't revert then return a string.
-        return extensions[domain].resolveExtension(extensionData);
+        return IExtensionResolver(extensionData.extensionResolver).resolveExtension(extensionData);
     
     }
 

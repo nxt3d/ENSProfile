@@ -211,6 +211,7 @@ library BytesUtilsSub {
 
         // First, count the number of labels in the domain using a for loop
         for (uint256 i = 0; i < len; ) {
+            // Read the length of the label
             uint256 labelLen = uint256(uint8(domain[i]));
             if (labelLen == 0) {
                 break;
@@ -223,7 +224,8 @@ library BytesUtilsSub {
         bytes[] memory labels = new bytes[](labelCount);
 
         // Parse the labels and store them using a for loop
-        for (uint256 i = 0; labelIndex = 0; i < len ) {
+        uint256 labelIndex = 0;
+        for (uint256 i = 0; i < len;) {
             uint256 labelLen = uint256(uint8(domain[i]));
             if (labelLen == 0) {
                 break;
