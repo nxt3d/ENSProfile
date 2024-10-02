@@ -66,7 +66,7 @@ contract ENSVotesExtension is GatewayFetchTarget {
             ExtensionData memory extensionData = abi.decode(extraData, (ExtensionData));
 
             // make sure the terminal key matches "votes"
-            
+            require(extensionData.key.equal("votes"), "Invalid key");
 
             // set the cycle to 1
             extensionData.cycle = 1;
