@@ -33,16 +33,10 @@ contract ENSVotesExtension is GatewayFetchTarget {
     using Strings for uint256;
     using Strings for string;
  
-	IGatewayProofVerifier immutable _verifier;
-	address immutable _exampleAddress;
-    ENS _ens;
     IVotes _votes;
 
  
-	constructor(IGatewayProofVerifier verifier, address exampleAddress, ENS ens, IVotes votes) {
-		_verifier = verifier;
-        _exampleAddress = exampleAddress;
-        _ens = ens;
+	constructor(IVotes votes) {
         _votes = votes;
 	}
  

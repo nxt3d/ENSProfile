@@ -7,27 +7,12 @@ import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/G
 // import ENS
 import {ENS} from "ens-contracts/registry/ENS.sol";
 import {BytesUtilsSub} from "./utils/BytesUtilsSub.sol";
-
-interface IExtensionResolver {
-    function resolveExtension(ExtensionData memory data) external returns (string memory);
-    function extensionCallback(bytes[] calldata values, uint8, bytes calldata extraData) external returns (string memory);
-}
-
-struct ExtensionData {
-    bytes32 node;
-    string key;
-    address extensionResolver;
-    bytes[] data;
-    uint256 cycle;
-}
+import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
 
 contract L1ExtensionsResolver is GatewayFetchTarget {
 	using GatewayFetcher for GatewayRequest;
 
     using BytesUtilsSub for bytes; 
-
-	IGatewayProofVerifier immutable _verifier;
-	address immutable _exampleAddress;
 
     // The ENS registry
     ENS _ens;
@@ -38,10 +23,8 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     // where the owner of the extension eth.dao is the 'id' part of the key and 'votes' is the 'terminal key' part of the key. 
     mapping (string domain => IExtensionResolver extension) extensions;
  
-	constructor(IGatewayProofVerifier verifier, address exampleAddress, ENS ens) {
+	constructor(ENS ens) {
         _ens = ens;
-		_verifier = verifier;
-        _exampleAddress = exampleAddress;
 	}
 
     // A function that allows the onwer or approved operator to add an extension to the resolver

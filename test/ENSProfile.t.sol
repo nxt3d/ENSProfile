@@ -145,7 +145,7 @@ contract ENSProfileTest is Test {
         ensProfile.addExtension("eth.extension");
     }
 
-    function test_009____removeExtension____________________ExtensionCanBeRemoved() public {
+    function test_009____removeExtension_______________________ExtensionRevokedSuccessfully() public {
         ensProfile.addExtension("eth.extension");
         assertTrue(ensProfile.isExtensionActive("eth.extension"));
         ensProfile.removeExtension("eth.extension");
@@ -303,18 +303,18 @@ contract ENSProfileTest is Test {
         assertEq(ensProfile.text(bytes32(0x0), key), value);
     }
 
-    function test_026____grantRole__________________________AdminRole_GrantedSuccessfully() public {
+    function test_025____grantRole__________________________AdminRole_GrantedSuccessfully() public {
         ensProfile.grantRole(ADMIN_ROLE, account2);
         assertTrue(ensProfile.hasRole(ADMIN_ROLE, account2));
     }
 
-    function test_027____revokeRole_________________________AdminRole_RevokedSuccessfully() public {
+    function test_026____revokeRole_________________________AdminRole_RevokedSuccessfully() public {
         ensProfile.grantRole(ADMIN_ROLE, account2);
         ensProfile.revokeRole(ADMIN_ROLE, account2);
         assertFalse(ensProfile.hasRole(ADMIN_ROLE, account2));
     }
 
-    function test_028____renounceRole_______________________AdminRole_RenouncedSuccessfully() public {
+    function test_027____renounceRole_______________________AdminRole_RenouncedSuccessfully() public {
         ensProfile.grantRole(ADMIN_ROLE, account2);
 
         vm.stopPrank();
@@ -325,7 +325,7 @@ contract ENSProfileTest is Test {
         assertFalse(ensProfile.hasRole(ADMIN_ROLE, account2));
     }
 
-    function test_029____grantRole__________________________UnauthorizedCaller_Reverts() public {
+    function test_028____grantRole__________________________UnauthorizedCaller_Reverts() public {
         vm.stopPrank();
         vm.startPrank(hacker);
 
@@ -339,7 +339,7 @@ contract ENSProfileTest is Test {
         ensProfile.grantRole(ADMIN_ROLE, account2);
     }
 
-    function test_030____setAddr____________________________NonAdmin_Reverts() public {
+    function test_029____setAddr____________________________NonAdmin_Reverts() public {
         vm.stopPrank();
         vm.startPrank(account2);
 
@@ -353,20 +353,20 @@ contract ENSProfileTest is Test {
         ensProfile.setAddr(account3);
     }
 
-    function test_032____addExtension_______________________SameExtensionMultipleTimes() public {
+    function test_030____addExtension_______________________SameExtensionMultipleTimes() public {
         ensProfile.addExtension("eth.extension");
         ensProfile.addExtension("eth.extension");
 
         assertTrue(ensProfile.isExtensionActive("eth.extension"));
     }
 
-    function test_033____addr_______________________________InvalidCoinType_ReturnsEmpty() public {
+    function test_031____addr_______________________________InvalidCoinType_ReturnsEmpty() public {
         uint256 invalidCoinType = 9999;
         bytes memory result = ensProfile.addr(bytes32(0x0), invalidCoinType);
         assertEq(result.length, 0);
     }
 
-    function test_034____text_______________________________NullCharacterInKey() public {
+    function test_032____text_______________________________NullCharacterInKey() public {
         string memory key = string(abi.encodePacked("key", bytes1(0x00), "test"));
         string memory value = "value";
 
@@ -375,7 +375,7 @@ contract ENSProfileTest is Test {
         assertEq(ensProfile.text(bytes32(0x0), key), value);
     }
 
-    function test_035____setText____________________________LongKeyAndValue() public {
+    function test_033____setText____________________________LongKeyAndValue() public {
         string memory key = new string(1024);
         string memory value = new string(2048);
 
@@ -383,7 +383,7 @@ contract ENSProfileTest is Test {
         assertEq(ensProfile.text(bytes32(0x0), key), value);
     }
 
-    function test_036____resolve____________________________AddrSelector_NoData_ReturnsZeroAddress() public {
+    function test_034____resolve____________________________AddrSelector_NoData_ReturnsZeroAddress() public {
         bytes memory data = abi.encodeWithSelector(IAddrResolver.addr.selector, bytes32(0x0));
         bytes memory result = ensProfile.resolve("", data);
 
@@ -391,7 +391,7 @@ contract ENSProfileTest is Test {
         assertEq(returnedAddr, address(0));
     }
 
-    function test_037____resolve____________________________AddrWithCoinTypeSelector_NoData_ReturnsEmpty() public {
+    function test_035____resolve____________________________AddrWithCoinTypeSelector_NoData_ReturnsEmpty() public {
         uint256 coinType = 1;
         bytes memory data = abi.encodeWithSelector(IAddressResolver.addr.selector, bytes32(0x0), coinType);
         bytes memory result = ensProfile.resolve("", data);
@@ -399,7 +399,7 @@ contract ENSProfileTest is Test {
         assertEq(returnedData.length, 0);
     }
 
-    function test_038____resolve____________________________TextSelector_NoData_ReturnsEmptyString() public {
+    function test_036____resolve____________________________TextSelector_NoData_ReturnsEmptyString() public {
         string memory key = "nonexistent";
         bytes memory data = abi.encodeWithSelector(ITextResolver.text.selector, bytes32(0x0), key);
         bytes memory result = ensProfile.resolve("", data);
@@ -407,7 +407,7 @@ contract ENSProfileTest is Test {
         assertEq(bytes(returnedValue).length, 0);
     }
 
-    function test_039____addr_______________________________CoinType_LargeData() public {
+    function test_037____addr_______________________________CoinType_LargeData() public {
         uint256 coinType = 1;
         bytes memory largeData = new bytes(1024);
         ensProfile.setAddr(coinType, largeData);
@@ -415,7 +415,7 @@ contract ENSProfileTest is Test {
         assertEq(result, largeData);
     }
 
-    function test_040____setAddr____________________________CoinType_ZeroAddress() public {
+    function test_038____setAddr____________________________CoinType_ZeroAddress() public {
         uint256 coinType = 1;
         bytes memory zeroAddressData = hex"0000000000000000000000000000000000000000";
         ensProfile.setAddr(coinType, zeroAddressData);
@@ -423,7 +423,7 @@ contract ENSProfileTest is Test {
         assertEq(result, zeroAddressData);
     }
 
-    function test_041____grantRole__________________________SelfGranting_Reverts() public {
+    function test_039____grantRole__________________________SelfGranting_Reverts() public {
         vm.stopPrank();
         vm.startPrank(hacker);
 
@@ -437,39 +437,39 @@ contract ENSProfileTest is Test {
         ensProfile.grantRole(ADMIN_ROLE, hacker);
     }
 
-    function test_042____grantRole__________________________AlreadyGranted_NoEffect() public {
+    function test_040____grantRole__________________________AlreadyGranted_NoEffect() public {
         ensProfile.grantRole(ADMIN_ROLE, account2);
         ensProfile.grantRole(ADMIN_ROLE, account2);
         assertTrue(ensProfile.hasRole(ADMIN_ROLE, account2));
     }
 
-    function test_043____revokeRole_________________________NotGranted_NoEffect() public {
+    function test_041____revokeRole_________________________NotGranted_NoEffect() public {
         ensProfile.revokeRole(ADMIN_ROLE, account2);
         assertFalse(ensProfile.hasRole(ADMIN_ROLE, account2));
     }
 
-    function test_044____renounceRole_______________________NotGranted_NoEffect() public {
+    function test_042____renounceRole_______________________NotGranted_NoEffect() public {
         vm.stopPrank();
         vm.startPrank(account2);
         ensProfile.renounceRole(ADMIN_ROLE, account2);
         assertFalse(ensProfile.hasRole(ADMIN_ROLE, account2));
     }
 
-    function test_045____setAddr____________________________InvalidAddressLength() public {
+    function test_043____setAddr____________________________InvalidAddressLength() public {
         bytes memory invalidAddress = hex"123456";
         ensProfile.setAddr(60, invalidAddress);
         bytes memory result = ensProfile.addr(bytes32(0x0), 60);
         assertEq(result, invalidAddress);
     }
 
-    function test_046____setText____________________________SpecialCharactersInKey() public {
+    function test_044____setText____________________________SpecialCharactersInKey() public {
         string memory key = unicode"特殊字符"; // Special characters
         string memory value = "value";
         ensProfile.setText(key, value);
         assertEq(ensProfile.text(bytes32(0x0), key), value);
     }
 
-    function test_048____resolve____________________________CorrectData_AfterUpdating() public {
+    function test_045____resolve____________________________CorrectData_AfterUpdating() public {
         ensProfile.setAddr(account2);
         bytes memory data = abi.encodeWithSelector(IAddrResolver.addr.selector, bytes32(0x0));
         bytes memory result = ensProfile.resolve("", data);
