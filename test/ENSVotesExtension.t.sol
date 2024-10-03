@@ -84,7 +84,7 @@ contract ENSVotesExtensionTest is Test {
 
     function test3000________________________________________________________________________________() public {}
 
-    function test_001____setAddr____________________________EthereumAddressCanBeSet() public {
+    function test_001____hook_______________________________CanGetTheENSVotesWithHook() public {
 
         // make the node of nick.eth using "\04nick\x03eth\x00"
         bytes memory dnsNameNickEth = "\x04nick\x03eth\x00";
@@ -95,16 +95,26 @@ contract ENSVotesExtensionTest is Test {
         try l1ExtensionsResolver.hook(nodeNickEth, "eth.ens.votes", address(l1ExtensionsResolver), 60) returns (string memory res) {
             result = res;
         } catch (bytes memory err) {
+            // catch the error (There was a revert, possibly due to an OffchainLookup)
+
+            // make sure the error is not empty
             if (err.length == 0) {
             revert("Unknown error");
             }
             
-            // get the first 4 bytes and make sure it matches the signature of OffchainLookup
+            // get the error signature
             bytes4 errorSig;
             assembly {
                 errorSig := mload(add(err, 32))
             }
+
+            // If the error was an OffchainLookup error
             if (errorSig == OffchainLookup.selector) {
+                // Note: Normally the OffchainLookup error would be handled by the client, which 
+                // would relay the error data to a gateway, which would then fetch the data
+                // and return the data to the callback function. 
+
+                // In this case, for testing we are simply returning the data directly. 
 
                 // remove the first 4 bytes of the error
                 bytes memory errorDataBytes = new bytes(err.length - 4);

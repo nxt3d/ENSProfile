@@ -46,8 +46,8 @@ contract ENSVotesExtension is GatewayFetchTarget {
 
     function resolveExtension(ExtensionData memory extensionData) public view returns (string memory) {
 
-        // If the cycle is 0, we need to resolve the Ethereum L1 address.
-        if (extensionData.cycle == 0) {
+        // If the cycle is 1, we need to resolve the Ethereum L1 address.
+        if (extensionData.cycle == 1) {
 
             // Use Unruggable Gateways here to get the address of the node on coinType 60, and also
             // make sure that the address's primary name is set to the node. 
@@ -60,9 +60,6 @@ contract ENSVotesExtension is GatewayFetchTarget {
 
             // make sure the terminal key matches "votes"
             require(extensionData.key.equal("votes"), "Invalid key");
-
-            // set the cycle to 1
-            extensionData.cycle = 1;
 
             // make a empty set of gateway URLs
             string[] memory urls = new string[](0);
@@ -93,10 +90,9 @@ contract ENSVotesExtension is GatewayFetchTarget {
             
         }
 
-        // If the cycle is 1 then we need to get the Ethereum address that was resolved, and get the 
+        // If the cycle is 2 then we need to get the Ethereum address that was resolved, and get the 
         // number of ENS votes. 
-        
-        if (extensionData.cycle == 1) {
+        if (extensionData.cycle == 2) {
 
             // decode the address from the first value
             address ethAddress = abi.decode(extensionData.data[0], (address));

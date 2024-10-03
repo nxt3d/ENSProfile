@@ -87,7 +87,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         values[0] = abi.encode(true);
 
         // make an ExtensionData struct
-        ExtensionData memory extensionData = ExtensionData(node, terminalKey, address(extensions[domain]), new bytes[](0), 0);
+        ExtensionData memory extensionData = ExtensionData(node, terminalKey, address(extensions[domain]), new bytes[](0), 1);
 
         // encode the ExtensionData struct
         bytes memory extensionDataEncoded = abi.encode(extensionData);
