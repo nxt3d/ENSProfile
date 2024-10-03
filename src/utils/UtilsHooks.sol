@@ -1,7 +1,10 @@
 //SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.20;
 
-library BytesUtilsSub {
+// some code from ENS Domains contracts
+
+library UtilsHooks {
     /*
      * @dev Returns the keccak-256 hash of a byte range.
      * @param self The byte string to hash.

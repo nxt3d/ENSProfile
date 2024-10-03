@@ -2,7 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
-import {BytesUtilsSub} from "../src/utils/BytesUtilsSub.sol";
+import {UtilsHooks} from "../src/utils/UtilsHooks.sol";
 import {L1ExtensionsResolver} from "../src/L1ExtensionsResolver.sol";
 import {ENSVotesExtension} from "../src/ENSVotesExtension.sol";
 import {DummyENSToken} from "../src/dummyContracts/DummyENSToken.sol";
@@ -24,7 +24,7 @@ error OffchainLookup(
 contract ENSVotesExtensionTest is Test {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    using BytesUtilsSub for bytes;
+    using UtilsHooks for bytes;
 
     uint64 twoYears = 63072000; // Approximately 2 years
     uint64 oneYear = 31536000; // A year in seconds.

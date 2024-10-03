@@ -6,7 +6,6 @@ import {GatewayFetcher, GatewayRequest} from "@unruggable/contracts/GatewayFetch
 import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/GatewayFetchTarget.sol";
 
 import {ENS} from "ens-contracts/registry/ENS.sol";
-import {BytesUtilsSub} from "./utils/BytesUtilsSub.sol";
 import {Strings} from "openzeppelin/contracts/utils/Strings.sol";
 
 import {IVotes} from "openzeppelin/contracts/governance/utils/IVotes.sol";

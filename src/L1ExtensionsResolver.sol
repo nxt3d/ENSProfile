@@ -6,13 +6,13 @@ import {GatewayFetcher, GatewayRequest} from "@unruggable/contracts/GatewayFetch
 import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/GatewayFetchTarget.sol";
 // import ENS
 import {ENS} from "ens-contracts/registry/ENS.sol";
-import {BytesUtilsSub} from "./utils/BytesUtilsSub.sol";
+import {UtilsHooks} from "./utils/UtilsHooks.sol";
 import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
 
 contract L1ExtensionsResolver is GatewayFetchTarget {
 	using GatewayFetcher for GatewayRequest;
 
-    using BytesUtilsSub for bytes; 
+    using UtilsHooks for bytes; 
 
     // The ENS registry
     ENS _ens;
@@ -31,10 +31,10 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     function addExtension(string memory domain, IExtensionResolver extension) public {
 
         // convert the domain, in reverse order, i.e. eth.dao to the DNS format of dao.eth. 
-        bytes memory name = BytesUtilsSub.reverseStringToDNS(domain);
+        bytes memory name = UtilsHooks.reverseStringToDNS(domain);
 
         // make the node from the name
-        bytes32 node = BytesUtilsSub.namehash(name, 0);
+        bytes32 node = name.namehash(0);
 
         // check to see if the msg.sender is the owner of the node or an approved operator
         require(_ens.owner(node) == msg.sender || _ens.isApprovedForAll(_ens.owner(node), msg.sender), "Not authorized to add extension");
@@ -47,10 +47,10 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     function removeExtension(string memory domain) public {
             
         // convert the domain, in reverse order, i.e. eth.dao to the DNS format of dao.eth. 
-        bytes memory name = BytesUtilsSub.reverseStringToDNS(domain);
+        bytes memory name = UtilsHooks.reverseStringToDNS(domain);
 
         // make the node from the name
-        bytes32 node = BytesUtilsSub.namehash(name, 0);
+        bytes32 node = name.namehash(0);
 
         // check to see if the msg.sender is the owner of the node or an approved operator
         require(_ens.owner(node) == msg.sender || _ens.isApprovedForAll(_ens.owner(node), msg.sender), "Not authorized to remove extension");
@@ -63,7 +63,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) public returns (string memory){  
 
         // split the key into the first two labels and the rest of the key i.e. eth.dao.votes.latest -> eth.dao, votes.latest
-        (string memory domain, string memory terminalKey) = BytesUtilsSub.splitReverseDomain(key, 2);
+        (string memory domain, string memory terminalKey) = UtilsHooks.splitReverseDomain(key, 2);
 
         // check to make sure the extension exists
         require(address(extensions[domain]) != address(0), "Extension does not exist");
