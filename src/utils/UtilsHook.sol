@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 
 // some code from ENS Domains contracts
 
-library UtilsHooks {
+library UtilsHook {
     /*
      * @dev Returns the keccak-256 hash of a byte range.
      * @param self The byte string to hash.
@@ -308,14 +308,15 @@ library UtilsHooks {
     }
 
     /**
-     * @dev Splits a reverse domain string into the first `numLabels` labels and the rest.
+     * @dev Splits a string into the first `numLabels` labels and the rest.
      * For example, with numLabels = 2, "eth.dao.votes.latest" becomes ("eth.dao", "votes.latest").
+     * If there are not dots, then return the whole string in the firstLabels.
      * @param reverseDomain The reverse domain name as a string.
      * @param numLabels The number of labels to include in the first part.
      * @return firstLabels The first `numLabels` labels concatenated with dots.
      * @return remainingLabels The remaining labels concatenated with dots.
      */
-    function splitReverseDomain(string memory reverseDomain, uint256 numLabels)
+    function splitOnDot(string memory reverseDomain, uint256 numLabels)
         internal
         pure
         returns (string memory firstLabels, string memory remainingLabels)
@@ -334,6 +335,11 @@ library UtilsHooks {
             if (domainBytes[i] == ".") {
                 dotPositions[dotCount++] = i;
             }
+        }
+
+        // If there is only one label, return the whole string as firstLabels
+        if (dotCount == 0) {
+            return (reverseDomain, "");
         }
 
         require(dotCount + 1 >= numLabels, "Domain has fewer labels than specified");

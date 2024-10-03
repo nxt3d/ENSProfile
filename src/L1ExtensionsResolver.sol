@@ -6,13 +6,18 @@ import {GatewayFetcher, GatewayRequest} from "@unruggable/contracts/GatewayFetch
 import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/GatewayFetchTarget.sol";
 // import ENS
 import {ENS} from "ens-contracts/registry/ENS.sol";
-import {UtilsHooks} from "./utils/UtilsHooks.sol";
+import {UtilsHook} from "./utils/UtilsHook.sol";
 import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
+
+
+// import console from forge-std
+import "forge-std/console.sol";
 
 contract L1ExtensionsResolver is GatewayFetchTarget {
 	using GatewayFetcher for GatewayRequest;
 
-    using UtilsHooks for bytes; 
+    using UtilsHook for bytes; 
+    using UtilsHook for string;
 
     // The ENS registry
     ENS _ens;
@@ -21,7 +26,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     // resolvers than the user's resolver, and can even resolver data from other chains. The hook key 
     // starts with the domain name of the owner of the key, in reverse order, i.e. eth.dao.votes, 
     // where the owner of the extension eth.dao is the 'id' part of the key and 'votes' is the 'terminal key' part of the key. 
-    mapping (string domain => IExtensionResolver extension) extensions;
+    mapping (string domain => IExtensionResolver extension) public extensions;
  
 	constructor(ENS ens) {
         _ens = ens;
@@ -31,7 +36,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     function addExtension(string memory domain, IExtensionResolver extension) public {
 
         // convert the domain, in reverse order, i.e. eth.dao to the DNS format of dao.eth. 
-        bytes memory name = UtilsHooks.reverseStringToDNS(domain);
+        bytes memory name = UtilsHook.reverseStringToDNS(domain);
 
         // make the node from the name
         bytes32 node = name.namehash(0);
@@ -47,7 +52,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     function removeExtension(string memory domain) public {
             
         // convert the domain, in reverse order, i.e. eth.dao to the DNS format of dao.eth. 
-        bytes memory name = UtilsHooks.reverseStringToDNS(domain);
+        bytes memory name = UtilsHook.reverseStringToDNS(domain);
 
         // make the node from the name
         bytes32 node = name.namehash(0);
@@ -63,7 +68,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
     function hook(bytes32 node, string calldata key, address resolver, uint256 coinType) public returns (string memory){  
 
         // split the key into the first two labels and the rest of the key i.e. eth.dao.votes.latest -> eth.dao, votes.latest
-        (string memory domain, string memory terminalKey) = UtilsHooks.splitReverseDomain(key, 2);
+        (string memory domain, string memory terminalKey) = key.splitOnDot(2);
 
         // check to make sure the extension exists
         require(address(extensions[domain]) != address(0), "Extension does not exist");
@@ -87,7 +92,7 @@ contract L1ExtensionsResolver is GatewayFetchTarget {
         values[0] = abi.encode(true);
 
         // make an ExtensionData struct
-        ExtensionData memory extensionData = ExtensionData(node, terminalKey, address(extensions[domain]), new bytes[](0), 1);
+        ExtensionData memory extensionData = ExtensionData(node, terminalKey, msg.sender, address(extensions[domain]), new bytes[](0), 1);
 
         // encode the ExtensionData struct
         bytes memory extensionDataEncoded = abi.encode(extensionData);

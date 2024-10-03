@@ -2,32 +2,21 @@
 pragma solidity ^0.8.25;
  
 import  "@unruggable/contracts/GatewayProtocol.sol";
-import {GatewayFetcher, GatewayRequest} from "@unruggable/contracts/GatewayFetcher.sol";
-import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/GatewayFetchTarget.sol";
-
 import {ENS} from "ens-contracts/registry/ENS.sol";
 import {Strings} from "openzeppelin/contracts/utils/Strings.sol";
 
 import {IVotes} from "openzeppelin/contracts/governance/utils/IVotes.sol";
+import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
 
 error OffchainLookup(
     address from,
     string[] urls,
-    bytes request,
+    bytes callData,
     bytes4 callback,
-    bytes carry
+    bytes extraData
 );
 
-struct ExtensionData {
-    bytes32 node;
-    string key;
-    address extensionResolver;
-    bytes[] data;
-    uint256 cycle;
-}
- 
-contract ENSVotesExtension is GatewayFetchTarget {
-	using GatewayFetcher for GatewayRequest;
+contract ENSVotesExtension is IExtensionResolver {
 
     using Strings for uint256;
     using Strings for string;
