@@ -11,7 +11,7 @@ import {IVotes} from "openzeppelin/contracts/governance/utils/IVotes.sol";
 
 import {ENSRegistry} from "ens-contracts/registry/ENSRegistry.sol";
 
-import {IExtensionResolver, ExtensionData} from "../src/extensions/IExtensionResolver.sol";
+import {IExtensionResolver, ExtensionData} from "../src/IExtensionResolver.sol";
 
 error OffchainLookup(
     address from,

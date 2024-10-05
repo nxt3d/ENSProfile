@@ -8,7 +8,7 @@ import {FollowExtension} from "../src/extensions/FollowExtension.sol";
 
 import {ENSRegistry} from "ens-contracts/registry/ENSRegistry.sol";
 
-import {IExtensionResolver, ExtensionData} from "../src/extensions/IExtensionResolver.sol";
+import {IExtensionResolver, ExtensionData} from "../src/IExtensionResolver.sol";
 
 error OffchainLookup(
     address from,

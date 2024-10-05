@@ -6,7 +6,7 @@ import {ENS} from "ens-contracts/registry/ENS.sol";
 import {Strings} from "openzeppelin/contracts/utils/Strings.sol";
 
 import {IVotes} from "openzeppelin/contracts/governance/utils/IVotes.sol";
-import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
+import {IExtensionResolver, ExtensionData} from "../IExtensionResolver.sol";
 
 error OffchainLookup(
     address from,

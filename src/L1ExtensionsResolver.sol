@@ -7,7 +7,7 @@ import {GatewayFetchTarget, IGatewayProofVerifier} from "@unruggable/contracts/G
 // import ENS
 import {ENS} from "ens-contracts/registry/ENS.sol";
 import {UtilsHook} from "./utils/UtilsHook.sol";
-import {IExtensionResolver, ExtensionData} from "./extensions/IExtensionResolver.sol";
+import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
 
 
 // import console from forge-std

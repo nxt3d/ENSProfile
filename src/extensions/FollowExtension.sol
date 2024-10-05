@@ -7,7 +7,7 @@ import "openzeppelin/contracts/utils/Strings.sol";
 import "../utils/StringUtilsHook.sol";  // Import the utility library
 import "../utils/UtilsHook.sol";  // Import the utility library
 
-import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
+import {IExtensionResolver, ExtensionData} from "../IExtensionResolver.sol";
 
 error OffchainLookup(
     address from,
