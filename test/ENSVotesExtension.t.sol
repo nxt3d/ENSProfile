@@ -4,14 +4,14 @@ pragma solidity ^0.8.26;
 import {Test, console} from "forge-std/Test.sol";
 import {UtilsHook} from "../src/utils/UtilsHook.sol";
 import {L1ExtensionsResolver} from "../src/L1ExtensionsResolver.sol";
-import {ENSVotesExtension} from "../src/ENSVotesExtension.sol";
+import {ENSVotesExtension} from "../src/extensions/ENSVotesExtension.sol";
 import {DummyENSToken} from "../src/dummyContracts/DummyENSToken.sol";
 
 import {IVotes} from "openzeppelin/contracts/governance/utils/IVotes.sol";
 
 import {ENSRegistry} from "ens-contracts/registry/ENSRegistry.sol";
 
-import {IExtensionResolver, ExtensionData} from "../src/IExtensionResolver.sol";
+import {IExtensionResolver, ExtensionData} from "../src/extensions/IExtensionResolver.sol";
 
 error OffchainLookup(
     address from,

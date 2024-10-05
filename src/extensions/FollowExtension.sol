@@ -4,8 +4,8 @@ pragma solidity ^0.8.26;
 import "openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "openzeppelin/contracts/access/AccessControl.sol";
 import "openzeppelin/contracts/utils/Strings.sol";
-import "./utils/StringUtilsHook.sol";  // Import the utility library
-import "./utils/UtilsHook.sol";  // Import the utility library
+import "../utils/StringUtilsHook.sol";  // Import the utility library
+import "../utils/UtilsHook.sol";  // Import the utility library
 
 import {IExtensionResolver, ExtensionData} from "./IExtensionResolver.sol";
 
