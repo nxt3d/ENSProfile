@@ -6,7 +6,7 @@ ENSProfile is a resolver built for Layer 2 (L2) chains, specifically designed fo
 
 1. **Unified ENS Records for L2 Users**: Users can set up this profile once and use it as the resolver for all their ENS names on L2. This eliminates the need to manage individual records for each ENS name—simply point multiple names to this profile and manage your records from one place.
 
-2. **Dynamic Profile Expansions**:
+2. **Dynamic Profile Extensions**:
    - ENSProfile introduces a concept of **Profile Extensions**, which dynamically expand the capabilities of the profile by adding "synthetic" hook records.
    - Synthetic hook records are resolved by external smart contracts (profile extensions) on L1 and can be resolve cross-chain data using proofs.
    - Extensions are added to the ENS Profile using their namespace, such as "eth.extension".
